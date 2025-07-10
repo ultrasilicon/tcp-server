@@ -13,6 +13,8 @@ A simple TCP server written in Rust using the Tokio runtime.
 
 2. Build and run the server:
 
+   (for blocking impl, change directory into `blocking/`)
+
    ```sh
    cargo run
    ```
