@@ -20,7 +20,7 @@ const BROADCAST_CHANNEL_SIZE: usize = 1000;
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<()> {
     let listener = TcpListener::bind(ADDR).await?;
-    println!("listening on port {ADDR}");
+    println!("async listening on port {ADDR}");
 
     let (tx, _) = broadcast::channel::<(ClientId, String)>(BROADCAST_CHANNEL_SIZE);
     let id_counter = Arc::new(AtomicUsize::new(0));
@@ -62,7 +62,9 @@ async fn handle_client(
             // read from client
             result = lines.next_line() => {
                 match result {
-                    Ok(Some(_msg)) => {
+                    Ok(Some(msg)) => {
+                        eprintln!("message {}: {}", writer.peer_addr()?.port(), msg);
+
                         // send ack msg
                         writer
                             .write_all(b"ACK:MESSAGE\n")
@@ -70,7 +72,7 @@ async fn handle_client(
                         writer.flush().await?;
 
                         // send received msg to broadcast
-                        let _ = tx.send((client_id, _msg));
+                        let _ = tx.send((client_id, msg));
                     }
                     Ok(None) => break, // handle client close
                     Err(e) => {
